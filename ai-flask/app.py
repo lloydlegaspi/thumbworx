@@ -114,6 +114,7 @@ def home():
     })
 
 @app.route("/health")
+@app.route("/api/health")
 def health():
     """Health check endpoint"""
     try:
