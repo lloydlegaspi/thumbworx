@@ -21,7 +21,7 @@ This guide will help you set up the Thumbworx tracking system locally and in pro
 ### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/lloydlegaspi/thumbworx.git
 cd thumbworx
 ```
 

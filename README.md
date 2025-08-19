@@ -72,7 +72,7 @@ A comprehensive vehicle tracking system built with Flask microservice, Laravel b
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/thumbworx.git
+   git clone https://github.com/lloydlegaspi/thumbworx.git
    cd thumbworx
    ```
 
