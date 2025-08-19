@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traccar Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Thumbworx Connection Test</h1>
+    <p>This page tests the complete data flow: Frontend → Laravel → Traccar Demo</p>
+    
+    <div id="results"></div>
+    
+    <button onclick="testConnections()">🧪 Run Tests</button>
+    <button onclick="clearResults()">🗑️ Clear Results</button>
+    
+    <script>
+        const API_BASE = 'https://thumbworx-production.up.railway.app/api';
+        const TRACCAR_DEMO = 'https://demo.traccar.org/api';
+        
+        function addResult(title, status, message, data = null) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${status}`;
+            
+            let content = `<h3>${title}</h3><p>${message}</p>`;
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            div.innerHTML = content;
+            
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function testConnections() {
+            clearResults();
+            addResult('🚀 Starting Tests', 'warning', 'Testing Thumbworx connection stack...');
+            
+            // Test 1: Direct Traccar Demo Connection
+            try {
+                addResult('🔗 Testing Direct Traccar Demo', 'warning', 'Checking if Traccar demo server is accessible...');
+                
+                const traccarResponse = await fetch(`${TRACCAR_DEMO}/devices`, {
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('demo:demo')
+                    }
+                });
+                
+                if (traccarResponse.ok) {
+                    const devices = await traccarResponse.json();
+                    addResult('✅ Traccar Demo Connection', 'success', 
+                        `Successfully connected to Traccar demo server. Found ${devices.length} devices.`, 
+                        devices.slice(0, 3));
+                } else {
+                    addResult('❌ Traccar Demo Failed', 'error', 
+                        `HTTP ${traccarResponse.status}: ${traccarResponse.statusText}`);
+                }
+            } catch (error) {
+                addResult('❌ Traccar Demo Error', 'error', 
+                    `Failed to connect to Traccar demo: ${error.message}`);
+            }
+            
+            // Test 2: Laravel Backend Health
+            try {
+                addResult('🏥 Testing Laravel Backend Health', 'warning', 'Checking backend API health...');
+                
+                const healthResponse = await fetch(`${API_BASE}/health`);
+                
+                if (healthResponse.ok) {
+                    const health = await healthResponse.json();
+                    addResult('✅ Laravel Backend Health', 'success', 
+                        'Backend is responding and healthy.', health);
+                } else {
+                    addResult('❌ Laravel Backend Health Failed', 'error', 
+                        `HTTP ${healthResponse.status}: ${healthResponse.statusText}`);
+                }
+            } catch (error) {
+                addResult('❌ Laravel Backend Error', 'error', 
+                    `Failed to connect to backend: ${error.message}`);
+            }
+            
+            // Test 3: Laravel Devices Endpoint
+            try {
+                addResult('📱 Testing Laravel Devices API', 'warning', 'Fetching devices through Laravel...');
+                
+                const devicesResponse = await fetch(`${API_BASE}/traccar/devices`);
+                
+                if (devicesResponse.ok) {
+                    const devices = await devicesResponse.json();
+                    if (devices.error) {
+                        addResult('⚠️ Laravel Devices Warning', 'warning', 
+                            'Laravel returned error response.', devices);
+                    } else {
+                        addResult('✅ Laravel Devices Success', 'success', 
+                            `Successfully fetched ${devices.length} devices through Laravel.`, 
+                            devices.slice(0, 3));
+                    }
+                } else {
+                    addResult('❌ Laravel Devices Failed', 'error', 
+                        `HTTP ${devicesResponse.status}: ${devicesResponse.statusText}`);
+                }
+            } catch (error) {
+                addResult('❌ Laravel Devices Error', 'error', 
+                    `CORS or network error: ${error.message}`);
+            }
+            
+            // Test 4: Laravel Positions Endpoint
+            try {
+                addResult('📍 Testing Laravel Positions API', 'warning', 'Fetching positions through Laravel...');
+                
+                const positionsResponse = await fetch(`${API_BASE}/traccar/positions-cached`);
+                
+                if (positionsResponse.ok) {
+                    const positions = await positionsResponse.json();
+                    if (positions.error) {
+                        addResult('⚠️ Laravel Positions Warning', 'warning', 
+                            'Laravel returned error response.', positions);
+                    } else {
+                        addResult('✅ Laravel Positions Success', 'success', 
+                            `Successfully fetched ${positions.length} positions through Laravel.`, 
+                            positions.slice(0, 3));
+                    }
+                } else {
+                    addResult('❌ Laravel Positions Failed', 'error', 
+                        `HTTP ${positionsResponse.status}: ${positionsResponse.statusText}`);
+                }
+            } catch (error) {
+                addResult('❌ Laravel Positions Error', 'error', 
+                    `CORS or network error: ${error.message}`);
+            }
+            
+            // Test 5: Flask Service
+            try {
+                addResult('🐍 Testing Flask Service', 'warning', 'Checking Flask AI service...');
+                
+                const flaskResponse = await fetch('https://thumbworx.onrender.com/health');
+                
+                if (flaskResponse.ok) {
+                    const health = await flaskResponse.json();
+                    addResult('✅ Flask Service Health', 'success', 
+                        'Flask service is responding.', health);
+                } else {
+                    addResult('❌ Flask Service Failed', 'error', 
+                        `HTTP ${flaskResponse.status}: ${flaskResponse.statusText}`);
+                }
+            } catch (error) {
+                addResult('❌ Flask Service Error', 'error', 
+                    `Failed to connect to Flask: ${error.message}`);
+            }
+            
+            addResult('🏁 Tests Complete', 'warning', 'All connection tests finished. Check results above.');
+        }
+        
+        // Auto-run tests on page load
+        window.onload = function() {
+            setTimeout(testConnections, 1000);
+        };
+    </script>
+</body>
+</html>
