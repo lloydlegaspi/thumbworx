@@ -18,17 +18,48 @@ TRACCAR_BASE = os.getenv("TRACCAR_BASE_URL")
 TRACCAR_USER = os.getenv("TRACCAR_USER")
 TRACCAR_PASS = os.getenv("TRACCAR_PASS")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-DB_URL = os.getenv("DATABASE_URL", "postgresql://thumb_user:thumb_pass@localhost/thumbworx")
+
+# Database configuration - use Render's internal database URL format
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    # Fallback to individual components for local development
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "5432")
+    DB_NAME = os.getenv("DB_NAME", "thumbworx")
+    DB_USER = os.getenv("DB_USER", "thumb_user")
+    DB_PASS = os.getenv("DB_PASS", "thumb_pass")
+    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# For Render, ensure the URL uses the correct SSL mode
+if DATABASE_URL and "render.com" in DATABASE_URL:
+    if "sslmode=" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require"
+
+DB_URL = DATABASE_URL
 
 def wait_for_db():
     """Wait for database to be ready with retries"""
     max_retries = 30
     retry_interval = 2
     
+    logger.info(f"Attempting to connect to database: {DB_URL.replace(DB_URL.split('@')[0].split('//')[1], '***')}")
+    
     for attempt in range(max_retries):
         try:
             logger.info(f"Attempting database connection (attempt {attempt + 1}/{max_retries})")
-            engine = create_engine(DB_URL)
+            # Create engine with appropriate settings for cloud databases
+            engine_kwargs = {
+                'pool_pre_ping': True,
+                'pool_recycle': 300,
+                'connect_args': {}
+            }
+            
+            # Add SSL configuration for cloud databases
+            if "render.com" in DB_URL or "amazonaws.com" in DB_URL:
+                engine_kwargs['connect_args']['sslmode'] = 'require'
+            
+            engine = create_engine(DB_URL, **engine_kwargs)
+            
             # Test connection with proper SQLAlchemy 2.0 syntax
             with engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
@@ -37,10 +68,11 @@ def wait_for_db():
         except Exception as e:
             logger.warning(f"Database connection attempt {attempt + 1} failed: {e}")
             if attempt < max_retries - 1:
-                logger.info(f"Retrying in 2 seconds...")
+                logger.info(f"Retrying in {retry_interval} seconds...")
                 time.sleep(retry_interval)
             else:
                 logger.error("Max retries reached. Could not connect to database.")
+                logger.error(f"Final connection string format: {DB_URL.split('@')[1] if '@' in DB_URL else 'Invalid URL format'}")
                 raise
 
 # Wait for database and create engine
@@ -89,8 +121,10 @@ def health():
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         db_status = "healthy"
+        db_info = f"Connected to: {DB_URL.split('@')[1] if '@' in DB_URL else 'local'}"
     except Exception as e:
         db_status = f"error: {str(e)}"
+        db_info = f"Failed to connect to: {DB_URL.split('@')[1] if '@' in DB_URL else 'local'}"
     
     try:
         # Test Redis connection
@@ -102,8 +136,15 @@ def health():
     return jsonify({
         "status": "running",
         "database": db_status,
+        "database_info": db_info,
         "redis": redis_status,
-        "traccar_base": TRACCAR_BASE
+        "traccar_base": TRACCAR_BASE,
+        "environment_vars": {
+            "DATABASE_URL": "set" if os.getenv("DATABASE_URL") else "not set",
+            "DB_HOST": os.getenv("DB_HOST", "not set"),
+            "DB_NAME": os.getenv("DB_NAME", "not set"),
+            "DB_USER": os.getenv("DB_USER", "not set")
+        }
     })
  
 @app.route("/api/traccar/devices")
