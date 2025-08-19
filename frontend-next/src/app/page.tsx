@@ -24,7 +24,9 @@ const fetcher = (url: string) => fetch(url).then(r => r.json());
 const LiveMap = dynamic(() => import("../components/LiveMap"), { ssr: false });
 
 export default function Home() {
-  const api = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  // Remove trailing slash from API URL to prevent double slashes
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const api = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
   
   // Fetch real-time data with better error handling
   const { data: positions, error: positionsError, isLoading: positionsLoading } = useSWR<Position[]>(
