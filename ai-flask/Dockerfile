@@ -3,4 +3,4 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000", "--workers=3"]
+CMD ["sh", "-c", "gunicorn app:app -b 0.0.0.0:${PORT:-5000} --workers=3"]
