@@ -2,16 +2,29 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+// Most basic test - no Laravel features
+Route::get('/basic', function () {
+    return 'PHP is working! Time: ' . date('Y-m-d H:i:s');
 });
 
-// Test route without Vite
+// Test with some Laravel features
 Route::get('/test', function () {
-    return '<h1>Laravel is working!</h1><p>Database: ' . config('database.default') . '</p>';
+    try {
+        return '<h1>Laravel Test</h1>' .
+               '<p>App Name: ' . config('app.name', 'Not Set') . '</p>' .
+               '<p>Environment: ' . config('app.env', 'Not Set') . '</p>' .
+               '<p>Database: ' . config('database.default', 'Not Set') . '</p>' .
+               '<p>Time: ' . now() . '</p>';
+    } catch (Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
 });
 
 // Test route with simple view
 Route::get('/simple', function () {
     return view('simple');
+});
+
+Route::get('/', function () {
+    return view('welcome');
 });
