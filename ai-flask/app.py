@@ -1,5 +1,6 @@
 import os, json, time
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import requests
 import redis
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, Float, String, DateTime, text
@@ -9,6 +10,9 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
  
 TRACCAR_BASE = os.getenv("TRACCAR_BASE_URL")
 TRACCAR_USER = os.getenv("TRACCAR_USER")
@@ -58,9 +62,7 @@ positions = Table('positions', metadata,
 )
  
 metadata.create_all(engine)
- 
-app = Flask(__name__)
- 
+
 def traccar_auth():
     return (TRACCAR_USER, TRACCAR_PASS)
 
@@ -188,4 +190,5 @@ def predict_eta():
     return jsonify({"eta_minutes": round(eta_minutes,2)})
  
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
