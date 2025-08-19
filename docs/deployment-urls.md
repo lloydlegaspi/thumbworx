@@ -8,10 +8,10 @@ This file tracks live deployment URLs and demo credentials for the Thumbworx sys
 
 | Service | Platform | URL | Status |
 |---------|----------|-----|--------|
-| Frontend | Vercel | `https://thumbworx.vercel.app` | 🟡 Pending |
-| Laravel API | Railway | `https://thumbworx-backend.up.railway.app` | 🟡 Pending |
-| Flask API | Render | `https://thumbworx-flask.onrender.com` | 🟡 Pending |
-| Database | Railway | `postgresql://...` | 🟡 Pending |
+| Frontend | Vercel | `https://thumbworx.vercel.app` | ✅ Live |
+| Laravel API | Railway | `https://thumbworx-production.up.railway.app` | ✅ Live |
+| Flask API | Render | `https://thumbworx.onrender.com` | ✅ Live |
+| Database | Railway | `postgresql://...` | ✅ Live |
 | Redis | Railway | `redis://...` | 🟡 Pending |
 
 ### Staging Environment
@@ -54,16 +54,16 @@ GET https://thumbworx.vercel.app
 
 **Laravel Backend**
 ```
-GET https://thumbworx-backend.up.railway.app/api/traccar/devices
-GET https://thumbworx-backend.up.railway.app/api/traccar/positions
+GET https://thumbworx-production.up.railway.app/api/traccar/devices
+GET https://thumbworx-production.up.railway.app/api/traccar/positions
 ```
 
 **Flask Microservice**
 ```
-GET https://thumbworx-flask.onrender.com/api/traccar/devices
-GET https://thumbworx-flask.onrender.com/api/traccar/positions
-GET https://thumbworx-flask.onrender.com/api/positions_cached
-POST https://thumbworx-flask.onrender.com/api/predict_eta
+GET https://thumbworx.onrender.com/api/traccar/devices
+GET https://thumbworx.onrender.com/api/traccar/positions
+GET https://thumbworx.onrender.com/api/positions_cached
+POST https://thumbworx.onrender.com/api/predict_eta
 ```
 
 ### Local Development Endpoints
