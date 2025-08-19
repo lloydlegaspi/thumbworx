@@ -1,0 +1,89 @@
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Laravel specific
+/storage/logs/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/bootstrap/cache/
+
+# Database
+*.sqlite
+*.db
+database.sqlite
+
+# Cache
+.cache/
+*.cache
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Temporary folders
+tmp/
+temp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Docker
+.dockerignore
+
+# Deployment
+deployment-config.json
+production-secrets.json
+staging-secrets.json
+
+# Backups
+*.backup
+*.bak
+*.sql.backup
+
+# Local development
+local-dev/
+dev-temp/

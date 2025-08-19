@@ -1,0 +1,149 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    name: Test Laravel Backend
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: thumbworx_test
+          POSTGRES_USER: thumb_user
+          POSTGRES_PASSWORD: thumb_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, redis
+
+    - name: Copy .env
+      run: cp backend-laravel/.env.example backend-laravel/.env
+
+    - name: Install Dependencies
+      working-directory: backend-laravel
+      run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+    - name: Generate key
+      working-directory: backend-laravel
+      run: php artisan key:generate
+
+    - name: Directory Permissions
+      working-directory: backend-laravel
+      run: chmod -R 755 storage bootstrap/cache
+
+    - name: Run Tests
+      working-directory: backend-laravel
+      run: php artisan test
+
+  test-flask:
+    runs-on: ubuntu-latest
+    name: Test Flask Microservice
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: thumbworx_test
+          POSTGRES_USER: thumb_user
+          POSTGRES_PASSWORD: thumb_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      working-directory: ai-flask
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Test Flask app
+      working-directory: ai-flask
+      run: |
+        python -c "import app; print('Flask app imports successfully')"
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    name: Test Next.js Frontend
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend-next/package-lock.json
+
+    - name: Install dependencies
+      working-directory: frontend-next
+      run: npm ci
+
+    - name: Build
+      working-directory: frontend-next
+      run: npm run build
+
+  docker-build:
+    runs-on: ubuntu-latest
+    name: Test Docker Build
+    needs: [test-backend, test-flask, test-frontend]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Test Docker Compose Build
+      working-directory: infra
+      run: |
+        docker-compose config
+        echo "Docker Compose configuration is valid"
