@@ -18,7 +18,13 @@ Route::get('/debug', function () {
             'APP_ENV' => config('app.env'),
             'APP_DEBUG' => config('app.debug'),
             'APP_URL' => config('app.url'),
-        ]
+        ],
+        'db_host' => config('database.connections.pgsql.host'),
+        'db_port' => config('database.connections.pgsql.port'),
+        'db_database' => config('database.connections.pgsql.database'),
+        'db_username' => config('database.connections.pgsql.username'),
+        'db_password' => config('database.connections.pgsql.password'),
+        'cors_origins' => config('cors.allowed_origins'),
     ]);
 });
 

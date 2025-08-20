@@ -2,30 +2,24 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | CORS Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your settings for cross-origin resource sharing
-    | (CORS). This is a security feature that restricts cross-origin HTTP
-    | requests from scripts running in the browser.
-    |
-    */
-
     'paths' => [
         'api/*',
         'sanctum/csrf-cookie',
         'health',
-        'up'
+        'up',
     ],
-    
+
     'allowed_methods' => ['*'],
-    
-    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', '')),
-    
+
+    // Hardcode the allowed origins directly
+    'allowed_origins' => [
+        'https://thumbworx.vercel.app',
+        'https://thumbworx-production.vercel.app',
+        'http://localhost:3000',
+    ],
+
     'allowed_origins_patterns' => [],
-    
+
     'allowed_headers' => [
         'Accept',
         'Authorization',
@@ -35,20 +29,20 @@ return [
         'X-XSRF-TOKEN',
         'Origin',
         'Cache-Control',
-        'Pragma'
+        'Pragma',
     ],
-    
+
     'exposed_headers' => [
         'Cache-Control',
         'Content-Language',
         'Content-Type',
         'Expires',
         'Last-Modified',
-        'Pragma'
+        'Pragma',
     ],
-    
+
     'max_age' => 86400, // 24 hours
-    
+
     'supports_credentials' => true,
 
 ];
