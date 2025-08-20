@@ -22,15 +22,7 @@ return [
     
     'allowed_methods' => ['*'],
     
-    'allowed_origins' => [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'https://thumbworx.vercel.app',
-        'https://thumbworx-production.vercel.app',
-        'https://thumbworx-*.vercel.app',
-        'https://*.vercel.app',
-        '*'
-    ],
+    'allowed_origins' => explode(',', env('CORS_ALLOWED_ORIGINS', '*')),
     
     'allowed_origins_patterns' => [
         'https://*-thumbworx*.vercel.app',
