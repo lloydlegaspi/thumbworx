@@ -16,3 +16,25 @@ Route::get('/traccar/devices', [TraccarController::class, 'devices']);
 Route::get('/traccar/positions', [TraccarController::class, 'positions']);
 Route::get('/traccar/positions-flask', [TraccarController::class, 'positionsFromFlask']);
 Route::get('/traccar/positions-cached', [TraccarController::class, 'cachedPositions']);
+
+// OPTIONS routes for CORS preflight requests
+Route::options('/health', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin');
+});
+
+Route::options('/traccar/{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin');
+})->where('any', '.*');
+
+Route::options('/{any}', function () {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin');
+})->where('any', '.*');

@@ -13,15 +13,52 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+        'health',
+        'up'
+    ],
+    
     'allowed_methods' => ['*'],
-    'allowed_origins' => env('CORS_ALLOWED_ORIGINS') ? 
-        explode(',', env('CORS_ALLOWED_ORIGINS')) : 
-        ['http://localhost:3000', 'https://thumbworx.vercel.app', 'https://*.vercel.app'],
-    'allowed_origins_patterns' => ['https://*-thumbworx*.vercel.app', 'https://thumbworx*.vercel.app'],
-    'allowed_headers' => ['*'],
-    'exposed_headers' => [],
-    'max_age' => 0,
-    'supports_credentials' => false,
+    
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://thumbworx.vercel.app',
+        'https://thumbworx-*.vercel.app',
+        'https://*.vercel.app'
+    ],
+    
+    'allowed_origins_patterns' => [
+        'https://*-thumbworx*.vercel.app',
+        'https://thumbworx*.vercel.app',
+        'https://thumbworx-production-*.vercel.app'
+    ],
+    
+    'allowed_headers' => [
+        'Accept',
+        'Authorization',
+        'Content-Type',
+        'X-Requested-With',
+        'X-CSRF-TOKEN',
+        'X-XSRF-TOKEN',
+        'Origin',
+        'Cache-Control',
+        'Pragma'
+    ],
+    
+    'exposed_headers' => [
+        'Cache-Control',
+        'Content-Language',
+        'Content-Type',
+        'Expires',
+        'Last-Modified',
+        'Pragma'
+    ],
+    
+    'max_age' => 86400, // 24 hours
+    
+    'supports_credentials' => true,
 
 ];
