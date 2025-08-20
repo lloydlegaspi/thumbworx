@@ -15,21 +15,45 @@ class CorsMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Get allowed origins from config
+        $allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'https://thumbworx.vercel.app',
+            'https://thumbworx-git-main-john-lloyd-legaspis-projects.vercel.app',
+            'https://thumbworx-*.vercel.app'
+        ];
+        
+        $origin = $request->header('Origin');
+        $allowedOrigin = '*'; // Default fallback
+        
+        // Check if origin is allowed
+        if ($origin) {
+            foreach ($allowedOrigins as $allowed) {
+                if ($origin === $allowed || fnmatch($allowed, $origin)) {
+                    $allowedOrigin = $origin;
+                    break;
+                }
+            }
+        }
+
         // Handle preflight OPTIONS requests
         if ($request->getMethod() === "OPTIONS") {
-            return response('', 200)
-                ->header('Access-Control-Allow-Origin', '*')
+            return response('', 204)
+                ->header('Access-Control-Allow-Origin', $allowedOrigin)
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                ->header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin, Cache-Control, Pragma')
+                ->header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin, Cache-Control, Pragma, X-CSRF-TOKEN, X-XSRF-TOKEN')
+                ->header('Access-Control-Allow-Credentials', 'true')
                 ->header('Access-Control-Max-Age', '86400');
         }
 
         $response = $next($request);
 
         // Add CORS headers to actual requests
-        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin, Cache-Control, Pragma');
+        $response->headers->set('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Origin, Cache-Control, Pragma, X-CSRF-TOKEN, X-XSRF-TOKEN');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
         $response->headers->set('Access-Control-Max-Age', '86400');
 
         return $response;

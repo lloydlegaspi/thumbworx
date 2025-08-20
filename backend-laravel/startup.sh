@@ -13,6 +13,8 @@ mkdir -p bootstrap/cache
 # Set permissions
 chmod -R 755 storage
 chmod -R 755 bootstrap/cache
+chown -R www-data:www-data storage
+chown -R www-data:www-data bootstrap/cache
 
 # Clear any cached config that might have wrong values
 php artisan config:clear || echo "Config clear failed"
@@ -28,11 +30,19 @@ fi
 
 # Cache configuration for better performance (after clearing)
 php artisan config:cache || echo "Config cache failed"
+php artisan route:cache || echo "Route cache failed"
+php artisan view:cache || echo "View cache failed"
 
 # Run migrations
 php artisan migrate --force || echo "Migration failed"
 
-echo "✅ Laravel setup complete, starting server..."
+echo "✅ Laravel setup complete, starting web server..."
 
-# Start the application
-exec "$@"
+# Check if we're running with nginx (production) or artisan serve (fallback)
+if command -v nginx > /dev/null 2>&1; then
+    echo "🌐 Starting with nginx + PHP-FPM (production mode)"
+    exec supervisord -c /etc/supervisor/conf.d/supervisord.conf
+else
+    echo "🔧 Falling back to artisan serve (development mode)"
+    exec php artisan serve --host=0.0.0.0 --port=${PORT:-80}
+fi
