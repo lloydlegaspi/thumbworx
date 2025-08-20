@@ -20,7 +20,7 @@ interface Device {
   lastUpdate: string;
 }
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
+const fetcher = (url: string) => fetch(url).then(r => r.json()).then(res => res.data || []);
 const LiveMap = dynamic(() => import("../components/LiveMap"), { ssr: false });
 
 export default function Home() {
