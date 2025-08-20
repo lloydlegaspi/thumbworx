@@ -57,20 +57,21 @@ export default function Home() {
   const analytics = useMemo(() => {
     if (!positions?.length || !devices?.length) return null;
 
-    const speeds = positions.filter(p => p.speed !== null).map(p => p.speed);
-    const avgSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length || 0;
-    const maxSpeed = Math.max(...speeds, 0);
-    const activeDevices = devices.filter(d => d.status === 'online').length;
-    
-    // Top performers
+    // Use all positions regardless of timestamp for testing
+    const speeds = positions.map(p => p.speed || 0);
+    const avgSpeed = speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0;
+    const maxSpeed = speeds.length ? Math.max(...speeds) : 0;
+    const activeDevices = devices.length; // Show all devices
+
+    // Top performers (show all devices with at least one position)
     const deviceMetrics = devices.map(device => {
       const devicePositions = positions.filter(p => p.device_id === device.id);
       if (devicePositions.length === 0) return null;
-      
+
       const deviceSpeeds = devicePositions.map(p => p.speed || 0);
-      const deviceAvgSpeed = deviceSpeeds.reduce((a, b) => a + b, 0) / deviceSpeeds.length;
+      const deviceAvgSpeed = deviceSpeeds.length ? deviceSpeeds.reduce((a, b) => a + b, 0) / deviceSpeeds.length : 0;
       const efficiency = Math.min((deviceAvgSpeed / 40) * 100, 100);
-      
+
       return {
         name: device.name,
         avgSpeed: Math.round(deviceAvgSpeed * 10) / 10,
