@@ -44,29 +44,55 @@ class TraccarController extends Controller
 
     public function devices()
     {
-        // Try to get devices from cache first
-        $cacheKey = 'traccar_devices';
-        $cachedDevices = Cache::get($cacheKey);
-        
-        if ($cachedDevices) {
-            return response()->json($cachedDevices);
-        }
+        try {
+            Log::info('Devices endpoint called');
+            
+            // Try to get devices from cache first
+            $cacheKey = 'traccar_devices';
+            $cachedDevices = Cache::get($cacheKey);
+            
+            if ($cachedDevices) {
+                Log::info('Returning cached devices');
+                return response()->json([
+                    'success' => true,
+                    'data' => $cachedDevices,
+                    'source' => 'cache'
+                ]);
+            }
 
-        // Fetch from Traccar
-        $devices = $this->makeTraccarRequest('devices');
-        
-        if ($devices === null) {
-            // Return fallback data if Traccar is unavailable
+            // Fetch from Traccar
+            Log::info('Fetching devices from Traccar');
+            $devices = $this->makeTraccarRequest('devices');
+            
+            if ($devices === null) {
+                Log::error('Failed to fetch devices from Traccar, returning fallback');
+                // Return fallback data if Traccar is unavailable
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Unable to connect to Traccar server',
+                    'data' => [],
+                    'source' => 'fallback'
+                ], 200); // Return 200 instead of 503 to avoid CORS issues
+            }
+
+            // Cache for 5 minutes
+            Cache::put($cacheKey, $devices, 300);
+            Log::info('Devices cached successfully');
+
             return response()->json([
-                'error' => 'Unable to connect to Traccar server',
-                'fallback_devices' => []
-            ], 503);
+                'success' => true,
+                'data' => $devices,
+                'source' => 'traccar'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Devices endpoint error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Internal server error',
+                'message' => $e->getMessage(),
+                'data' => []
+            ], 200);
         }
-
-        // Cache for 5 minutes
-        Cache::put($cacheKey, $devices, 300);
-
-        return response()->json($devices);
     }
 
     public function positions()
@@ -159,37 +185,61 @@ class TraccarController extends Controller
     
     public function cachedPositions()
     {
-        // First try Flask cached positions
-        $flaskUrl = env('FLASK_SERVICE_URL', 'https://thumbworx.onrender.com');
-        
         try {
-            $response = Http::timeout(10)->get("{$flaskUrl}/api/positions_cached");
+            Log::info('Cached positions endpoint called');
             
-            if ($response->successful() && !empty($response->json())) {
-                return response()->json($response->json());
+            // First try Flask cached positions
+            $flaskUrl = env('FLASK_SERVICE_URL', 'https://thumbworx.onrender.com');
+            
+            try {
+                Log::info('Trying Flask service at: ' . $flaskUrl);
+                $response = Http::timeout(10)->get("{$flaskUrl}/api/positions_cached");
+                
+                if ($response->successful() && !empty($response->json())) {
+                    Log::info('Returning Flask cached positions');
+                    return response()->json([
+                        'success' => true,
+                        'data' => $response->json(),
+                        'source' => 'flask'
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::warning("Flask cached positions unavailable: " . $e->getMessage());
             }
+
+            // Fallback to database positions
+            Log::info('Fetching positions from database');
+            $dbPositions = Position::latest()
+                ->latest('device_time')
+                ->take(20)
+                ->get()
+                ->map(function ($position) {
+                    return [
+                        'id' => $position->id,
+                        'deviceId' => $position->device_id,
+                        'latitude' => (float) $position->latitude,
+                        'longitude' => (float) $position->longitude,
+                        'speed' => (float) $position->speed,
+                        'deviceTime' => $position->device_time ? $position->device_time->toISOString() : null,
+                        'attributes' => $position->attributes ?: new \stdClass()
+                    ];
+                });
+
+            Log::info('Returning database positions: ' . $dbPositions->count() . ' records');
+            return response()->json([
+                'success' => true,
+                'data' => $dbPositions,
+                'source' => 'database'
+            ]);
         } catch (\Exception $e) {
-            Log::warning("Flask cached positions unavailable: " . $e->getMessage());
+            Log::error('Cached positions endpoint error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Internal server error',
+                'message' => $e->getMessage(),
+                'data' => []
+            ], 200);
         }
-
-        // Fallback to database positions
-        $dbPositions = Position::latest()
-            ->latest('device_time')
-            ->take(20)
-            ->get()
-            ->map(function ($position) {
-                return [
-                    'id' => $position->id,
-                    'deviceId' => $position->device_id,
-                    'latitude' => (float) $position->latitude,
-                    'longitude' => (float) $position->longitude,
-                    'speed' => (float) $position->speed,
-                    'deviceTime' => $position->device_time ? $position->device_time->toISOString() : null,
-                    'attributes' => $position->attributes ?: new \stdClass()
-                ];
-            });
-
-        return response()->json($dbPositions);
     }
 
     public function healthCheck()

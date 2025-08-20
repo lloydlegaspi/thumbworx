@@ -21,20 +21,36 @@ class CorsMiddleware
             'http://localhost:3001',
             'https://thumbworx.vercel.app',
             'https://thumbworx-git-main-john-lloyd-legaspis-projects.vercel.app',
-            'https://thumbworx-*.vercel.app'
+        ];
+        
+        // Additional patterns for Vercel deployments
+        $allowedPatterns = [
+            'https://thumbworx-*.vercel.app',
+            'https://*-thumbworx*.vercel.app',
+            'https://thumbworx*.vercel.app'
         ];
         
         $origin = $request->header('Origin');
-        $allowedOrigin = '*'; // Default fallback
+        $allowedOrigin = null;
         
-        // Check if origin is allowed
-        if ($origin) {
-            foreach ($allowedOrigins as $allowed) {
-                if ($origin === $allowed || fnmatch($allowed, $origin)) {
+        // Check if origin is in exact matches
+        if ($origin && in_array($origin, $allowedOrigins)) {
+            $allowedOrigin = $origin;
+        }
+        
+        // Check if origin matches patterns
+        if (!$allowedOrigin && $origin) {
+            foreach ($allowedPatterns as $pattern) {
+                if (fnmatch($pattern, $origin)) {
                     $allowedOrigin = $origin;
                     break;
                 }
             }
+        }
+        
+        // Fallback for development or if no specific origin
+        if (!$allowedOrigin) {
+            $allowedOrigin = $origin ?: '*';
         }
 
         // Handle preflight OPTIONS requests
