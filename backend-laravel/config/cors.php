@@ -26,8 +26,10 @@ return [
         'http://localhost:3000',
         'http://localhost:3001',
         'https://thumbworx.vercel.app',
+        'https://thumbworx-production.vercel.app',
         'https://thumbworx-*.vercel.app',
-        'https://*.vercel.app'
+        'https://*.vercel.app',
+        '*'
     ],
     
     'allowed_origins_patterns' => [
