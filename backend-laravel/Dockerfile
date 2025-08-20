@@ -27,4 +27,4 @@ RUN php -r "file_exists('.env') || copy('.env.example', '.env');"
 
 EXPOSE 80
 
-CMD ["sh", "-c", "php artisan config:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80"]
+CMD ["sh", "-c", "php artisan route:clear && php artisan config:clear && php artisan config:cache && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=80"]

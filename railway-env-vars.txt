@@ -1,0 +1,34 @@
+# Railway Environment Variables - Copy these to your Railway dashboard
+
+APP_NAME=Thumbworx
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://thumbworx-production.up.railway.app
+
+# Generate this with: php artisan key:generate --show
+APP_KEY=base64:CXePwAB+lS/nh9UQJTQcLr1WHqVWcIkjeIY2kZdji5Q=
+
+# Database - Railway auto-provides this
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+DB_CONNECTION=pgsql
+
+# CORS Configuration - CRITICAL FIX
+CORS_ALLOWED_ORIGINS=https://thumbworx.vercel.app,https://thumbworx-git-main-john-lloyd-legaspis-projects.vercel.app,http://localhost:3000
+
+# Traccar Configuration
+TRACCAR_BASE_URL=https://demo.traccar.org
+TRACCAR_USER=demo
+TRACCAR_PASS=demo
+
+# Flask Service
+FLASK_SERVICE_URL=https://thumbworx.onrender.com
+
+# Laravel Configuration
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+BROADCAST_DRIVER=log
+CACHE_DRIVER=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120

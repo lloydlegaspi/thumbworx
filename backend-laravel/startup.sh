@@ -18,6 +18,7 @@ chmod -R 755 bootstrap/cache
 php artisan config:clear || echo "Config clear failed"
 php artisan route:clear || echo "Route clear failed"
 php artisan view:clear || echo "View clear failed"
+php artisan cache:clear || echo "Cache clear failed"
 
 # Try to generate app key if not set
 if [ -z "$APP_KEY" ]; then
@@ -25,7 +26,7 @@ if [ -z "$APP_KEY" ]; then
     php artisan key:generate --force || echo "Key generation failed"
 fi
 
-# Cache configuration for better performance
+# Cache configuration for better performance (after clearing)
 php artisan config:cache || echo "Config cache failed"
 
 # Run migrations
